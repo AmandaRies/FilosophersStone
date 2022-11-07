@@ -156,10 +156,10 @@ def makexbutton(a, f):
     standinxpic = PhotoImage(file = r'C:\Users\acrie\OneDrive\Pictures\Camera Roll\xbuttonstandin.png')
     if obj[a] == "No":
         delbtndict[a] = tk.Label(f, image = standinxpic,height= 1, width=5)
-        delbtndict[a].grid(row = 0, column = 1, padx = xpad, pady=ypad)
     else:
         delbtndict[a] = tk.Button(f, text = "X", height= 1, width=5)
-        delbtndict[a].grid(row = 0, column = 1, padx = xpad, pady=ypad)
+        
+    delbtndict[a].grid(row = 0, column = 1, padx = xpad, pady=ypad)
 
 def makeftswitch(fts, num, f):
     ftsbtndict[fts] = tk.Button(f, text='Image Files', bg = 'blue', command= lambda num=num:imgtxtswitch(num),height= 1, width=10)
@@ -170,29 +170,25 @@ def makefbbtn(fts, n, f):
     fl = "fl" + n
     if obj[fts] == "img":
         ofdbtndict[ofd] = tk.Button(f, text='Select File(s)', bg= '#FFD700', command= lambda n=n: select_imgfiles(n),height= 1, width=10)
-        ofdbtndict[ofd].grid(row = 0, column = 3, padx = xpad, pady=ypad)
-        filelistdict[fl] = []
     else:
         ofdbtndict[ofd] = tk.Button(f, text='Select File(s)', bg= '#FFD700', command=lambda n=n: select_txtfiles(n),height= 1, width=10)
-        ofdbtndict[ofd].grid(row = 0, column = 3, padx = xpad, pady=ypad)
-        filelistdict[fl] = []    
+        
+    ofdbtndict[ofd].grid(row = 0, column = 3, padx = xpad, pady=ypad)
+    filelistdict[fl] = []    
 
 def makefinalfiletypechooser(fts, n, f):
     fft = "finalfiletype" + n
+    dftoptdict[fft] = tk.StringVar(root)
     if obj[fts] == "img":
-        dftoptdict[fft] = tk.StringVar(root)
         dftoptdict[fft].set(img_type_list[0])
         dftmenudict[fft]= tk.OptionMenu(f, dftoptdict[fft],*img_type_list) #drop down menu for intended destination file type
-        dftmenudict[fft].config(bg="white", activebackground='#00acdb', highlightthickness= 0 ,width=5)
-        dftmenudict[fft]['menu'].config(bg="white", activebackground='#00acdb')
-        dftmenudict[fft].grid(row = 0, column = 4, padx = xpad, pady=ypad)
     else:
-        dftoptdict[fft] = tk.StringVar(root)
         dftoptdict[fft].set(txt_type_list[0])
         dftmenudict[fft]= tk.OptionMenu(f, dftoptdict[fft],*txt_type_list) #drop down menu for intended destination file type
-        dftmenudict[fft].config(bg="white", activebackground='#00acdb', highlightthickness= 0 ,width=5)
-        dftmenudict[fft]['menu'].config(bg="white", activebackground='#00acdb')
-        dftmenudict[fft].grid(row = 0, column = 4, padx = xpad, pady=ypad)
+    
+    dftmenudict[fft].config(bg="white", activebackground='#00acdb', highlightthickness= 0 ,width=5)
+    dftmenudict[fft]['menu'].config(bg="white", activebackground='#00acdb')
+    dftmenudict[fft].grid(row = 0, column = 4, padx = xpad, pady=ypad)
 
 
     
