@@ -83,11 +83,9 @@ def select_txtfiles(n):
         title='Select text files',
         initialdir='/',
         filetypes=(
-        ('All Supported Text Files', '*.txt .docx .doc .xlsx .pdf'),
+        ('All Supported Text Files', '*.txt .docx .doc'),
         ('Txt Files','*.txt'),
-        ('Word Documents','*.docx .doc'),
-        ('Excel Files','*.xlsx'),
-        ('PDF Files','*.pdf')
+        ('Word Documents','*.docx .doc')
         )
     )
     
