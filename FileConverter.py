@@ -10,7 +10,6 @@ import os
 import tkinter as tk
 from tkinter import *
 from tkinter import filedialog as fd
-from tkinter import ttk
 from tkinter.filedialog import askdirectory as ad
 from tkinter.messagebox import showinfo
 import PIL
@@ -204,16 +203,30 @@ def makedestchooser(n, f):
     
 def makeconverter(n, f):
     cb = "converter" + n
-    convertdict[cb] = tk.Button(f, text='Convert', bg= '#FFD700', command=lambda n=n:convert(n),height= 1, width=10)
+    convertdict[cb] = tk.Button(f, text='Convert', bg= '#FFD700', command=lambda n=n:convertcheck(n),height= 1, width=10)
     convertdict[cb].grid(row = 0, column = 7, padx = xpad, pady=ypad)
     
+def convertcheck(n):
+    fl = "fl" + n
+    fts = "fts" + n
+    dest = "seldes" + n
+    if (len(filelistdict[fl]) == 0) and (obj[dest] == "none"):
+        messagebox.showerror("Error", "No files or destination have been selected.")
+    elif obj[dest] == "none":
+        messagebox.showerror("Error", "No destination has been selected.")
+    elif len(filelistdict[fl]) == 0:
+        messagebox.showerror("Error", "No files have been selected.")
+    else:
+        if obj[fts] == "img":
+            convertImg(n)
     
-def convert(n):
+    
+def convertImg(n):
     dts = "dts" + n
     fts = "fts" + n
     fft = "finalfiletype" + n
     fl = "fl" + n
-    dest = "seldest" + n
+    dest = "seldes" + n
     d = seldesdict[dest].replace("/","\\") #changes / to \
     ext = dftoptdict[fft].get() #intended file type extension
     if obj[dts] == "folderselect":
@@ -225,13 +238,9 @@ def convert(n):
             
             final = d + s4 + ext #makes directory string for saving the new file
             
-            if obj[fts] == "img": 
-                im = Image.open(r''+s1+'')
-                im.save(r''+final+'')
-            
-            #if obj[fts] == "txt": 
-            #    im = Image.open(r''+s1+'')
-                #im.save(r''+final+'')
+             
+            im = Image.open(r''+s1+'')
+            im.save(r''+final+'')
 
 
 def makeset(num):
