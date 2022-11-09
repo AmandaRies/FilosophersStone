@@ -1,7 +1,7 @@
 '''
 Created on Sep 26, 2022
 
-Last Edited on Nov 7, 2022
+Last Edited on Nov 8, 2022
 
 @author: acrie
 '''
@@ -207,9 +207,13 @@ def makeconverter(n, f):
     convertdict[cb].grid(row = 0, column = 7, padx = xpad, pady=ypad)
     
 def convertcheck(n):
-    fl = "fl" + n
+    dts = "dts" + n
     fts = "fts" + n
+    fft = "finalfiletype" + n
+    fl = "fl" + n
     dest = "seldes" + n
+    d = seldesdict[dest].replace("/","\\") #changes / to \
+    ext = dftoptdict[fft].get() #intended file type extension
     if (len(filelistdict[fl]) == 0) and (obj[dest] == "none"):
         messagebox.showerror("Error", "No files or destination have been selected.")
     elif obj[dest] == "none":
@@ -218,17 +222,12 @@ def convertcheck(n):
         messagebox.showerror("Error", "No files have been selected.")
     else:
         if obj[fts] == "img":
-            convertImg(n)
+            convertImg(dts, fl, dest, ext)
+        else:
+            convertTxt(n, dts, fl, dest, ext)
     
-    
-def convertImg(n):
-    dts = "dts" + n
-    fts = "fts" + n
-    fft = "finalfiletype" + n
-    fl = "fl" + n
-    dest = "seldes" + n
-    d = seldesdict[dest].replace("/","\\") #changes / to \
-    ext = dftoptdict[fft].get() #intended file type extension
+
+def convertImg(dts, fl, dest, ext):
     if obj[dts] == "folderselect":
         for file in filelistdict[fl]:
             s1 = file.replace("/","\\") #changes / to \
@@ -236,12 +235,58 @@ def convertImg(n):
             s3 = s1.rfind(".") #finds locations of .
             s4 = s1[s2:s3] #separates filename from directory and removes the extension and period
             
-            final = d + s4 + ext #makes directory string for saving the new file
+            final = seldesdict[dest].replace("/","\\") + s4 + ext #makes directory string for saving the new file
             
-             
             im = Image.open(r''+s1+'')
             im.save(r''+final+'')
 
+def convertTxt(n, dts, fl, dest, ext):
+    d = seldesdict[dest].replace("/","\\") #changes / to \
+    if obj[dts] == "folderselect":
+        for file in filelistdict[fl]:
+            s1 = file.replace("/","\\") #changes / to \
+            s2 = s1.rfind("\\") #finds location of final \
+            s3 = s1.rfind(".") #finds locations of .
+            s4 = s1[s2:s3] #separates filename from directory and removes the extension and period
+            
+            if ext.startswith('doc'):
+                if file.endswith('.txt'):
+                    txt2docs(s1, s4, ext, d)
+                if (s1[(s3+1):]).startswith('doc'):
+                    docs2docs(s1, s4, ext, d)
+            
+            if ext == ".txt" and (s1[(s3+1):]).startswith('doc'):
+                docs2txt(s1, s4, ext, d)
+    
+
+            
+
+def txt2docs(s1, s4, ext, d):
+    doc = Document()
+    final = d + s4 + ext     
+    with open(r''+ s1 +'') as f:
+        lines = f.readlines()
+
+        for x in lines:
+            doc.add_paragraph(x.strip())
+    
+    doc.save(r''+ final +'')
+
+def docs2txt(s1, s4, ext, d):
+    doc = Document(r''+ s1 +'')
+    final = d + s4 + ext     
+    allText = []
+    p = ""
+    for docpara in doc.paragraphs:
+        allText.append(docpara.text)
+        p = p + docpara.text + '\n'
+        with open(r''+ final +'', 'w') as f:
+            f.write(p)
+
+def docs2docs(s1, s4, ext, d): #doc to docx and vice versa
+    doc = Document(r''+ s1 +'')
+    final = d + s4 + ext
+    doc.save(r''+ final +'')
 
 def makeset(num):
     global total_sets
