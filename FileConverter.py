@@ -1,7 +1,7 @@
 '''
 Created on Sep 26, 2022
 
-Last Edited on Nov 8, 2022
+Last Edited on Nov 16, 2022
 
 @author: acrie
 '''
@@ -10,12 +10,15 @@ import os
 import tkinter as tk
 from tkinter import *
 from tkinter import filedialog as fd
+from tkinter import ttk
 from tkinter.filedialog import askdirectory as ad
-from tkinter.messagebox import showinfo
+from tkinter import messagebox
 import PIL
 from PIL import Image
 import docx
+from docx import Document
 import json
+
 
 global wW
 wW = 950 #window Width
@@ -30,15 +33,12 @@ bgframe.place(width = wW, height = 750)
 
 my_details = {
     "set1" : "1",
-    "ypos1" : "150",
-    "allowsectdel1":"No",
     "fts1": "img",
     "dts1": "folderselect",
     "seldes1": "none"
     }
 
 #set = whole set in a row
-#allowsectdel has a 'yes' or 'no' for if a section will have the option to be deleted. All, but the first set will be removable
 #fts = file type selected: image (img) or text (txt) types (switch button)(is for file browser and the end type option menu)
 #dts = destination type selection: folder or application (which could itself be the destination or sends the converted files to their intended final location)
 #seldes = selected destination ex. picture folder
@@ -53,8 +53,8 @@ ypad = 7
 global xpad
 xpad = 15
 global total_sets
+setnumdict = {} #holds number string for functions
 framedict = {} #frame dictionary
-yposdict = {} #y position
 delbtndict = {} #section delete button
 ftsbtndict = {} #fts = file type switch
 ofdbtndict = {} #ofd = open file directory
@@ -107,37 +107,37 @@ def select_imgfiles(n):
 
 
 def addtolist(n, f): #f here equals files, not frame
-    fl = "fl" + n
+    fl = "set" + n
     filelistdict[fl].clear()
     for x in f:
         filelistdict[fl].append(x)
 
 def select_folder(n):
-    dest = "seldest" + n
+    dest = "set" + n
     folderdir = ad(parent=root,initialdir="/",title='Please select a directory')
     seldesdict[dest] = folderdir
-    obj[dest] = seldesdict[dest]
+    obj["seldes" + n] = seldesdict[dest]
     updatejson()
 
 
     
-
+#switches options for the file directory and for the desired file type drop down menu from image file types to text file types and vice versa
 def imgtxtswitch(n):
     f = "fts" + n
-    o = "filebrowser" + n
+    s = "set" + n
     if obj[f] == "img":
         obj[f] = "txt"
-        ofdbtndict[o].configure(command = lambda n=n: select_txtfiles(n))
+        ofdbtndict[s].configure(command = lambda n=n: select_txtfiles(n))
         alteroptions(n, txt_type_list)
     else:
         obj[f] = "img"
-        ofdbtndict[o].configure(command = lambda n=n: select_imgfiles(n))
+        ofdbtndict[s].configure(command = lambda n=n: select_imgfiles(n))
         alteroptions(n, img_type_list)
     updatejson()
     
 
-def alteroptions(n, l):
-    fft = "finalfiletype" + n
+def alteroptions(n, l):#l is list
+    fft = "set" + n
     dftoptdict[fft].set('')
     dftmenudict[fft]['menu'].delete(0,'end')
     for opt in l: 
@@ -149,101 +149,101 @@ def desttypeswitcher(n): #currently only set up to allow for folder destination,
     if obj[dest] == "folderselect":
         obj[dest] = "folderselect"
 
-def makexbutton(a, f):
+def makexbutton(n, f):
     standinxpic = PhotoImage(file = r'C:\Users\acrie\OneDrive\Pictures\Camera Roll\xbuttonstandin.png')
-    if obj[a] == "No":
-        delbtndict[a] = tk.Label(f, image = standinxpic,height= 1, width=5)
+    cset = "set" + n
+    if obj[cset] == "1":
+        delbtndict[cset] = tk.Label(f, image = standinxpic,height= 1, width=5)
     else:
-        delbtndict[a] = tk.Button(f, text = "X", height= 1, width=5)
+        delbtndict[cset] = tk.Button(f, text = "X",command= lambda n=n: deleteset(n), height= 1, width=5)
         
-    delbtndict[a].grid(row = 0, column = 1, padx = xpad, pady=ypad)
+    delbtndict[cset].grid(row = 0, column = 1, padx = xpad, pady=ypad)
 
-def makeftswitch(fts, num, f):
-    ftsbtndict[fts] = tk.Button(f, text='Image Files', bg = 'blue', command= lambda num=num:imgtxtswitch(num),height= 1, width=10)
-    ftsbtndict[fts].grid(row = 0, column = 2, padx = xpad, pady=ypad)
+def makeftswitch(n, f):
+    cset = "set" + n
+    ftsbtndict[cset] = tk.Button(f, text='Image Files', bg = 'blue', command= lambda n=n:imgtxtswitch(n),height= 1, width=10)
+    ftsbtndict[cset].grid(row = 0, column = 2, padx = xpad, pady=ypad)
 
-def makefbbtn(fts, n, f):
-    ofd = "filebrowser" + n
-    fl = "fl" + n
-    if obj[fts] == "img":
-        ofdbtndict[ofd] = tk.Button(f, text='Select File(s)', bg= '#FFD700', command= lambda n=n: select_imgfiles(n),height= 1, width=10)
+def makefbbtn(n, f):
+    cset = "set" + n
+    if obj['fts' + n] == "img":
+        ofdbtndict[cset] = tk.Button(f, text='Select File(s)', bg= '#FFD700', command= lambda n=n: select_imgfiles(n),height= 1, width=10)
     else:
-        ofdbtndict[ofd] = tk.Button(f, text='Select File(s)', bg= '#FFD700', command=lambda n=n: select_txtfiles(n),height= 1, width=10)
+        ofdbtndict[cset] = tk.Button(f, text='Select File(s)', bg= '#FFD700', command=lambda n=n: select_txtfiles(n),height= 1, width=10)
         
-    ofdbtndict[ofd].grid(row = 0, column = 3, padx = xpad, pady=ypad)
-    filelistdict[fl] = []    
+    ofdbtndict[cset].grid(row = 0, column = 3, padx = xpad, pady=ypad)
+    filelistdict[cset] = []    
 
-def makefinalfiletypechooser(fts, n, f):
-    fft = "finalfiletype" + n
-    dftoptdict[fft] = tk.StringVar(root)
-    if obj[fts] == "img":
-        dftoptdict[fft].set(img_type_list[0])
-        dftmenudict[fft]= tk.OptionMenu(f, dftoptdict[fft],*img_type_list) #drop down menu for intended destination file type
+def makefinalfiletypechooser(n, f):
+    cset = "set" + n
+    dftoptdict[cset] = tk.StringVar(root)
+    if obj["fts"+ n] == "img":
+        dftoptdict[cset].set(img_type_list[0])
+        dftmenudict[cset]= tk.OptionMenu(f, dftoptdict[cset],*img_type_list) #drop down menu for intended destination file type
     else:
-        dftoptdict[fft].set(txt_type_list[0])
-        dftmenudict[fft]= tk.OptionMenu(f, dftoptdict[fft],*txt_type_list) #drop down menu for intended destination file type
+        dftoptdict[cset].set(txt_type_list[0])
+        dftmenudict[cset]= tk.OptionMenu(f, dftoptdict[cset],*txt_type_list) #drop down menu for intended destination file type
     
-    dftmenudict[fft].config(bg="white", activebackground='#00acdb', highlightthickness= 0 ,width=5)
-    dftmenudict[fft]['menu'].config(bg="white", activebackground='#00acdb')
-    dftmenudict[fft].grid(row = 0, column = 4, padx = xpad, pady=ypad)
+    dftmenudict[cset].config(bg="white", activebackground='#00acdb', highlightthickness= 0 ,width=5)
+    dftmenudict[cset]['menu'].config(bg="white", activebackground='#00acdb')
+    dftmenudict[cset].grid(row = 0, column = 4, padx = xpad, pady=ypad)
 
 
     
 def makedesttypeswitch(n, f):
-    dest = 'dts' + n
-    dtsdict[dest] = tk.Button(f, text='Local', bg = 'blue', command= lambda n=n: desttypeswitcher(n),height= 1, width=10) #destination type switch
-    dtsdict[dest].grid(row = 0, column = 5, padx = xpad, pady=ypad)
+    cset = "set" + n
+    dtsdict[cset] = tk.Button(f, text='Local', bg = 'blue', command= lambda n=n: desttypeswitcher(n),height= 1, width=10) #destination type switch
+    dtsdict[cset].grid(row = 0, column = 5, padx = xpad, pady=ypad)
 
 
 
 def makedestchooser(n, f):
-    dc = "dc" + n
-    dcbtndict[dc] = tk.Button(f, text='Select Destination', bg= '#FFD700', command=lambda n=n:select_folder(n),height= 1, width=15) #destination
-    dcbtndict[dc].grid(row = 0, column = 6, padx = xpad, pady=ypad)
+    cset = "set" + n
+    dcbtndict[cset] = tk.Button(f, text='Select Destination', bg= '#FFD700', command=lambda n=n:select_folder(n),height= 1, width=15) #destination
+    dcbtndict[cset].grid(row = 0, column = 6, padx = xpad, pady=ypad)
+    seldesdict[cset] = obj["seldes" + n]
+    
     
 def makeconverter(n, f):
-    cb = "converter" + n
+    cb = "set" + n
     convertdict[cb] = tk.Button(f, text='Convert', bg= '#FFD700', command=lambda n=n:convertcheck(n),height= 1, width=10)
     convertdict[cb].grid(row = 0, column = 7, padx = xpad, pady=ypad)
     
+    
 def convertcheck(n):
-    dts = "dts" + n
-    fts = "fts" + n
-    fft = "finalfiletype" + n
-    fl = "fl" + n
-    dest = "seldes" + n
-    d = seldesdict[dest].replace("/","\\") #changes / to \
-    ext = dftoptdict[fft].get() #intended file type extension
-    if (len(filelistdict[fl]) == 0) and (obj[dest] == "none"):
+    cset = "set" + n
+    d = seldesdict[cset].replace("/","\\") #changes / to \
+    ext = dftoptdict[cset].get() #intended file type extension
+    if (len(filelistdict[cset]) == 0) and (obj["seldes"+n] == "none"):
         messagebox.showerror("Error", "No files or destination have been selected.")
-    elif obj[dest] == "none":
+    elif obj["seldes"+n] == "none":
         messagebox.showerror("Error", "No destination has been selected.")
-    elif len(filelistdict[fl]) == 0:
+    elif len(filelistdict[cset]) == 0:
         messagebox.showerror("Error", "No files have been selected.")
     else:
-        if obj[fts] == "img":
-            convertImg(dts, fl, dest, ext)
+        if obj["fts"+n] == "img":
+            convertImg(n, d, cset, ext)
         else:
-            convertTxt(n, dts, fl, dest, ext)
+            convertTxt(n, d, cset, ext)
+    messagebox.showinfo("showinfo", "Conversion complete")
     
 
-def convertImg(dts, fl, dest, ext):
-    if obj[dts] == "folderselect":
-        for file in filelistdict[fl]:
+def convertImg(n, d, cset, ext):
+    if obj["dts" + n] == "folderselect":
+        for file in filelistdict[cset]:
             s1 = file.replace("/","\\") #changes / to \
             s2 = s1.rfind("\\") #finds location of final \
             s3 = s1.rfind(".") #finds locations of .
             s4 = s1[s2:s3] #separates filename from directory and removes the extension and period
             
-            final = seldesdict[dest].replace("/","\\") + s4 + ext #makes directory string for saving the new file
+            final = d + s4 + ext #makes directory string for saving the new file
             
             im = Image.open(r''+s1+'')
             im.save(r''+final+'')
 
-def convertTxt(n, dts, fl, dest, ext):
-    d = seldesdict[dest].replace("/","\\") #changes / to \
-    if obj[dts] == "folderselect":
-        for file in filelistdict[fl]:
+def convertTxt(n, d, cset, ext):
+    if obj["dts" + n] == "folderselect":
+        for file in filelistdict[cset]:
             s1 = file.replace("/","\\") #changes / to \
             s2 = s1.rfind("\\") #finds location of final \
             s3 = s1.rfind(".") #finds locations of .
@@ -253,15 +253,15 @@ def convertTxt(n, dts, fl, dest, ext):
                 if file.endswith('.txt'):
                     txt2docs(s1, s4, ext, d)
                 if (s1[(s3+1):]).startswith('doc'):
-                    docs2docs(s1, s4, ext, d)
+                    docs2docs(s1, d, s4, ext)
             
             if ext == ".txt" and (s1[(s3+1):]).startswith('doc'):
-                docs2txt(s1, s4, ext, d)
+                docs2txt(s1, d, s4, ext)
     
 
             
 
-def txt2docs(s1, s4, ext, d):
+def txt2docs(s1, d, s4, ext):
     doc = Document()
     final = d + s4 + ext     
     with open(r''+ s1 +'') as f:
@@ -272,7 +272,7 @@ def txt2docs(s1, s4, ext, d):
     
     doc.save(r''+ final +'')
 
-def docs2txt(s1, s4, ext, d):
+def docs2txt(s1, d, s4, ext):
     doc = Document(r''+ s1 +'')
     final = d + s4 + ext     
     allText = []
@@ -283,36 +283,33 @@ def docs2txt(s1, s4, ext, d):
         with open(r''+ final +'', 'w') as f:
             f.write(p)
 
-def docs2docs(s1, s4, ext, d): #doc to docx and vice versa
+def docs2docs(s1, d, s4, ext): #doc to docx and vice versa
     doc = Document(r''+ s1 +'')
     final = d + s4 + ext
     doc.save(r''+ final +'')
 
 def makeset(num):
     global total_sets
-    f = "frame" + num
-    a = "allowsectdel" + num
-    fts = "fts" + num
-    total_sets = int(num)
-    yposition = "ypos" + num
-    yposit = int(obj[yposition])
-    yposdict[yposition] = yposit
+    f = "set" + num
+    #setnumdict[f] = num
+    currset = int(num)
+    yposit = setYpos(currset)
     framedict[f] = Frame(root, bg = '#00acdb')
     framedict[f].place(x= 5, y= yposit, width = (wW-10), height = 40)
-    makexbutton(a, framedict[f])
-    makeftswitch(fts, num, framedict[f])
-    makefbbtn(fts, num, framedict[f])
-    makefinalfiletypechooser(fts, num, framedict[f])
+    makexbutton(num, framedict[f])
+    makeftswitch(num, framedict[f])
+    makefbbtn(num, framedict[f])
+    makefinalfiletypechooser(num, framedict[f])
     makedesttypeswitch(num, framedict[f])
     makedestchooser(num, framedict[f])
     makeconverter(num, framedict[f])
 
+def setYpos(n):
+    ypos = 150 + (48*(n-1))
+    return ypos
 
-def addnewset():
-    pass
-
-with open('fileconverterdata.json') as f:
-    obj = json.load(f)
+def iterthruobj(obj):
+    global total_sets
     
     total_sets = 0
     for s in obj:
@@ -321,11 +318,101 @@ with open('fileconverterdata.json') as f:
             num = obj[s]
             makeset(num)
 
+with open('fileconverterdata.json') as f:
+    obj = json.load(f)
+    
+    iterthruobj(obj)
+    
+
+
+
+def addnewset():
+    global total_sets
+    total_sets = total_sets + 1
+    ntsstr = str(total_sets) #new total set string
+    obj["set" + ntsstr] = ntsstr
+    obj["fts" + ntsstr]= "img"
+    obj["dts" + ntsstr]= "folderselect"
+    obj["seldes" + ntsstr]= "none"
+    updatejson()
+    makeset(ntsstr)
+
+def deleteset(n):
+    global total_sets
+    
+    num = int(n)
+    dif = total_sets-num
+    i = total_sets
+    
+    if dif >= 1:
+        destroyset(num)
+        while i > num:
+            m = num-1
+            print(i)
+            i=i-1
+    else:
+        destroyset(num)
+        dictpop(num)
+    print('end')
+    total_sets = total_sets -1
+
+
+def destroyset(n):
+    cset = "set" + str(n)
+    framedict[cset].destroy()
+    delbtndict[cset].destroy()
+    ftsbtndict[cset].destroy()
+    ofdbtndict[cset].destroy()
+    dftmenudict[cset].destroy()
+    dtsdict[cset].destroy()
+    dcbtndict[cset].destroy()
+    convertdict[cset].destroy()
+                
+def dictpop(n):
+    nstr = str(n)
+    cset = "set" + nstr
+    framedict.pop(cset)
+    delbtndict.pop(cset)
+    ftsbtndict.pop(cset)
+    ofdbtndict.pop(cset)
+    filelistdict.pop(cset)
+    dftmenudict.pop(cset)
+    dftoptdict.pop(cset)
+    dtsdict.pop(cset)
+    dcbtndict.pop(cset)
+    seldesdict.pop(cset)
+    convertdict.pop(cset)
+
+#this shifts the positions of the sets after(below) the deleted set to "fill the created empty space" if necessary 
+#i.e. if there are 5 sets and set 4 is deleted, set 5's data and visual widget are moved to set 4's previous position on screen and in the dictionaries
+def shiftset(n,m):#unfinshed and in progress
+    nstr = str(n)
+    mstr = str(m)
+    cset = "set" + nstr
+    ncset = "set" + mstr
+    obj["set" + mstr] = obj["set" + nstr]
+    obj["fts" + mstr] = obj["fts" + nstr]
+    obj["dts" + mstr] = obj["dts" + nstr]
+    obj["seldes" + mstr] = obj["seldes" + nstr]
+    framedict[ncset] = framedict[cset]
+    delbtndict[ncset] = delbtndict[cset]
+    ftsbtndict[ncset] = ftsbtndict[cset]
+    ofdbtndict[ncset] = ofdbtndict[cset]
+    dftmenudict[ncset] = dftmenudict[cset]
+    dtsdict[ncset] = dtsdict[cset]
+    dcbtndict[ncset] = dcbtndict[cset]
+    convertdict[ncset] = convertdict[cset]
+    
+    if obj["fts"+ mstr] == "img":
+        ofdbtndict[ncset].configure(framedict[ncset], command= lambda mstr=mstr: select_imgfiles(mstr))
+
+
+
 
 aboveframe = Frame(root, bg = 'red')
 aboveframe.place(x= 5, y= 2, width = (wW-10), height = 140)
 
-addbtn = tk.Button(aboveframe, text = "Add set", height = 2, width = 15)
+addbtn = tk.Button(aboveframe, text = "Add set", command= addnewset, height = 2, width = 15)
 addbtn.grid(row = 0, column = 1, padx = xpad, pady=ypad)
 
 
